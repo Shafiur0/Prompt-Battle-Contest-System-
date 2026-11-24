@@ -1,0 +1,32 @@
+{
+  "name": "prompt-battle-platform",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,worker,web -c blue,yellow,green \"npm run dev --workspace=@prompt-battle/api\" \"npm run dev:worker --workspace=@prompt-battle/api\" \"npm run dev --workspace=@prompt-battle/web\"",
+    "build": "npm run build --workspace=@prompt-battle/core && npm run build --workspace=@prompt-battle/openrouter && npm run build --workspace=@prompt-battle/api && npm run build --workspace=@prompt-battle/web",
+    "test": "npm run build --workspace=@prompt-battle/core && npm run test --workspaces --if-present",
+    "typecheck": "npm run build --workspace=@prompt-battle/core && npm run build --workspace=@prompt-battle/openrouter && npm run typecheck --workspaces --if-present",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "db:migrate": "npm run db:migrate --workspace=@prompt-battle/api",
+    "db:seed": "npm run db:seed --workspace=@prompt-battle/api",
+    "tunnel": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-tunnel.ps1",
+    "tunnel:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-tunnel.ps1",
+    "local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",
+    "start:local": "concurrently -n api,worker,web -c blue,yellow,green \"npm run start --workspace=@prompt-battle/api\" \"npm run start:worker --workspace=@prompt-battle/api\" \"npm run start --workspace=@prompt-battle/web\""
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "tsx": "latest",
+    "@types/node": "latest",
+    "concurrently": "latest"
+  }
+}

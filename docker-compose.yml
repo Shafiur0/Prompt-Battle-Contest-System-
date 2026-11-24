@@ -1,0 +1,56 @@
+name: prompt-battle
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: prompt_battle
+      POSTGRES_USER: prompt_battle
+      POSTGRES_PASSWORD: local-development-only
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-keycloak.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prompt_battle -d prompt_battle"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: prompt_battle
+      KC_DB_PASSWORD: local-development-only
+      KC_BOOTSTRAP_ADMIN_USERNAME: local-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: local-admin-change-before-deployment
+      KC_HOSTNAME: http://localhost:8080
+      KC_HTTP_ENABLED: "true"
+    ports: ["127.0.0.1:8080:8080"]
+    volumes: ["./infra/keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro"]
+    depends_on:
+      postgres: {condition: service_healthy}
+  storage:
+    image: rustfs/rustfs@sha256:0dff1515b3c52b5ce8c5df2263420c7f93ae1c5d07cca79e19e57cff86b84c85
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: local-minio
+      RUSTFS_SECRET_KEY: local-minio-secret-change-before-deployment
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    volumes: ["minio-data:/data"]
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:

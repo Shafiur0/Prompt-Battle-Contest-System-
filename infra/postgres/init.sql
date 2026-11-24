@@ -1,0 +1,1 @@
+CREATE DATABASE keycloak OWNER prompt_battle;

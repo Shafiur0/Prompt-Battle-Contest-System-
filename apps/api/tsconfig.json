@@ -1,0 +1,9 @@
+{
+ "compilerOptions":{
+  "target":"ES2022","module":"Node20","moduleResolution":"Node16","outDir":"dist","rootDir":"src",
+  "strict":true,"experimentalDecorators":true,"emitDecoratorMetadata":true,"esModuleInterop":true,
+  "skipLibCheck":true,"sourceMap":true,"types":["node"]
+ },
+ "include":["src/auth.ts","src/config.ts","src/controller.ts","src/domain.ts","src/guards.ts","src/main.ts","src/organizer.ts","src/service.ts","src/worker-main.ts","src/workers/**/*.ts","src/db/index.ts","src/db/migrate.ts","src/db/seed.ts"],
+ "exclude":["src/http/**","src/services/**","src/**/*.test.ts"]
+}

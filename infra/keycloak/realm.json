@@ -1,0 +1,254 @@
+{
+  "realm": "prompt-battle",
+  "registrationAllowed": false,
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "organizer"
+      },
+      {
+        "name": "participant"
+      }
+    ]
+  },
+  "displayName": "Prompt Battle",
+  "users": [
+    {
+      "realmRoles": [
+        "organizer"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "organizer",
+      "firstName": "Local",
+      "lastName": "Organizer",
+      "email": "organizer@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-organizer-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant1",
+      "firstName": "Participant",
+      "lastName": "1",
+      "email": "participant1@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant2",
+      "firstName": "Participant",
+      "lastName": "2",
+      "email": "participant2@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant3",
+      "firstName": "Participant",
+      "lastName": "3",
+      "email": "participant3@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant4",
+      "firstName": "Participant",
+      "lastName": "4",
+      "email": "participant4@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant5",
+      "firstName": "Participant",
+      "lastName": "5",
+      "email": "participant5@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant6",
+      "firstName": "Participant",
+      "lastName": "6",
+      "email": "participant6@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant7",
+      "firstName": "Participant",
+      "lastName": "7",
+      "email": "participant7@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant8",
+      "firstName": "Participant",
+      "lastName": "8",
+      "email": "participant8@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant9",
+      "firstName": "Participant",
+      "lastName": "9",
+      "email": "participant9@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    },
+    {
+      "realmRoles": [
+        "participant"
+      ],
+      "enabled": true,
+      "emailVerified": true,
+      "username": "participant10",
+      "firstName": "Participant",
+      "lastName": "10",
+      "email": "participant10@example.test",
+      "credentials": [
+        {
+          "temporary": false,
+          "type": "password",
+          "value": "local-participant-change-me"
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:3100"
+      ],
+      "clientId": "prompt-battle",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "publicClient": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/api/v1/auth/callback",
+        "http://localhost:3100/api/v1/auth/callback"
+      ],
+      "enabled": true,
+      "secret": "local-client-secret-change-before-deployment",
+      "protocolMappers": [
+        {
+          "name": "application-realm-roles",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true"
+          },
+          "protocol": "openid-connect"
+        }
+      ]
+    }
+  ]
+}

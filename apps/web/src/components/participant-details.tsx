@@ -1,0 +1,48 @@
+"use client";
+import { useEffect, useId, useState } from "react";
+import { getParticipantDetail } from "@/lib/backend";
+import { errorMessage } from "@/lib/api";
+import type { ParticipantDetailView } from "@/lib/views";
+import { Badge, Empty, Icon, Modal, Notice, date, number, status } from "./ui";
+import styles from "./participant-details.module.css";
+import {formatCompletionTime} from "@/lib/ranking-format";
+export function workspaceLabel(value?:string){const names:Record<string,string>={OPEN:"Working",FINALIZING:"Final answer locked",FINALIZED:"Results ready",NO_SUBMISSION:"No final answer",ACCOUNTING_INCIDENT:"Usage needs review"};return value?names[value]||status(value):"Not reported";}
+export function moderationLabel(value?:string){return value==="BANNED"?"Banned":value==="ACTIVE"?"Active":"Not reported";}
+function accountLabel(value?:string){const names:Record<string,string>={OPEN:"Available",FINALIZING:"Settling usage",FINALIZED:"Usage settled",ACCOUNTING_INCIDENT:"Usage needs review"};return value?names[value]||status(value):"Not reported";}
+function reviewLabel(value?:string){const names:Record<string,string>={NO_VIOLATION:"No copying violation",CONFIRMED_VIOLATION:"Copying violation confirmed",COPY_VIOLATION:"Copying violation confirmed",INSUFFICIENT_EVIDENCE:"Review unresolved"};return value?names[value]||status(value):"Review pending";}
+const percent=(value?:number|null)=>value==null?"Pending":(value*100).toFixed(1)+"%";
+const elapsed=(value?:number|null)=>value==null?"Not recorded":formatCompletionTime(value);
+type Tab="overview"|"evaluation"|"history";
+export default function ParticipantDetails({competitionId,participantId,onClose,onReview}:{competitionId:string;participantId:string;onClose:()=>void;onReview?:()=>void}) {
+ const [detail,setDetail]=useState<ParticipantDetailView|null>(null),[error,setError]=useState<string|null>(null),[tab,setTab]=useState<Tab>("overview"),[retry,setRetry]=useState(0);
+ const id=useId();
+ useEffect(()=>{
+  let alive=true;setDetail(null);setError(null);setTab("overview");
+  async function load(){try{const data=await getParticipantDetail(competitionId,participantId);if(alive){setDetail(data);setError(null);}}catch(reason){if(alive)setError(errorMessage(reason));}}
+  void load();const timer=setInterval(()=>{if(document.visibilityState==="visible")void load();},6000);
+  return()=>{alive=false;clearInterval(timer);};
+ },[competitionId,participantId,retry]);
+ const evaluation=detail?.evaluation,score=evaluation?.score,ranking=detail?.ranking;
+ return <Modal title={detail?detail.alias+" · Participant details":"Participant details"} onClose={onClose}>
+  {error&&<Notice error>{error}</Notice>}
+  {!detail?<><Empty icon="people" title={error?"Participant details unavailable":"Loading participant details"}>{error?"Retry to load this participant’s latest record.":"Retrieving progress, token use and evaluation."}</Empty>{error&&<div className="actions"><button type="button" className="button" onClick={()=>setRetry(value=>value+1)}>Retry</button></div>}</>:<>
+   <div className={styles.identity}><div className={styles.avatar} aria-hidden="true">{detail.alias.slice(0,1).toUpperCase()}</div><div><strong>{detail.alias}</strong><div className={styles.badges}><Badge tone={detail.moderationStatus==="BANNED"?"amber":"green"}>{moderationLabel(detail.moderationStatus)}</Badge><span>{workspaceLabel(detail.workspaceState)}</span></div></div></div>
+   {detail.publicModerationNotice&&<div className={styles.participantNotice}><small>Notice shown to this participant</small><p>{detail.publicModerationNotice}</p></div>}
+   <div className={styles.tabs} role="tablist" aria-label="Participant detail sections">{([["overview","Overview"],["evaluation","Evaluation"],["history","Attempt history"]] as const).map(([value,label])=><button type="button" role="tab" id={id+"-"+value} aria-controls={id+"-panel"} aria-selected={tab===value} tabIndex={tab===value?0:-1} className={tab===value?styles.selectedTab:""} key={value} onClick={()=>setTab(value)} onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const tabs:Tab[]=["overview","evaluation","history"],index=tabs.indexOf(value),next=event.key==="Home"?tabs[0]:event.key==="End"?tabs[2]:tabs[(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length];setTab(next);document.getElementById(id+"-"+next)?.focus();}}>{label}{value==="history"&&<span>{detail.attempts.length}</span>}</button>)}</div>
+   <div role="tabpanel" id={id+"-panel"} aria-labelledby={id+"-"+tab}>
+    {tab==="overview"&&<div className={styles.panel}>
+     <h3>Token budget</h3><div className={styles.stats}><div><small>Used across all attempts</small><strong>{number(detail.wallet.confirmedUsed)}</strong></div><div><small>Reserved for pending requests</small><strong>{number(detail.wallet.reserved)}</strong></div><div><small>Available</small><strong>{number(detail.wallet.available)}</strong></div><div><small>Total allowance</small><strong>{number(detail.wallet.allowance)}</strong></div></div>
+     <h3>Competition progress</h3><dl className={styles.definitions}><div><dt>Workspace</dt><dd>{workspaceLabel(detail.workspaceState)}</dd></div><div><dt>Final answer</dt><dd>{detail.submissionId?"Selected and recorded":"Not selected"}</dd></div><div><dt>Token account</dt><dd>{accountLabel(detail.wallet.state)}</dd></div>{ranking&&<><div><dt>Leaderboard rank</dt><dd>{ranking.rank==null?"Not ranked":"#"+ranking.rank+" of "+ranking.totalParticipants}</dd></div><div><dt>Correct completion order</dt><dd>{ranking.solveOrder==null?"Not recorded":"#"+ranking.solveOrder+" of "+ranking.totalParticipants}</dd></div><div><dt>Time to first correct completion</dt><dd>{elapsed(ranking.solveElapsedMs)}</dd></div></>}</dl>
+     {!detail.historyAvailable&&<div className={styles.sealed}><Icon name="lock" size={18}/><span>Private evaluation, prompts and answers become available here after the competition closes.</span></div>}
+    </div>}
+    {tab==="evaluation"&&<div className={styles.panel}>{!detail.historyAvailable?<Empty icon="lock" title="Evaluation details are sealed">Private results appear after the whole competition closes.</Empty>:!evaluation?<Empty icon="trophy" title={detail.submissionId?"Evaluation is not available yet":"No final answer selected"}>{detail.submissionId?"The system has not recorded an evaluation for this final answer.":"An evaluation requires a recorded final answer."}</Empty>:<>
+     <div className={styles.stats}><div><small>Final score</small><strong>{score?.finalScore==null?"Pending":score.finalScore.toFixed(2)}</strong></div><div><small>Copying penalty</small><strong>{evaluation.penalty==null?"Pending":evaluation.penalty+" points"}</strong></div><div><small>Token efficiency</small><strong>{percent(score?.efficiency)}</strong></div><div><small>Correct completion time</small><strong className={styles.time}>{elapsed(ranking?.solveElapsedMs??evaluation.solveElapsedMs)}</strong></div></div>
+     <div className={styles.review}><h3>{reviewLabel(evaluation.verdict)}</h3><small>{evaluation.source==="AI_REVIEWER"?"Automatic reviewer decision":evaluation.source==="HUMAN"?"Organizer review decision":"Decision source pending"}</small>{evaluation.reason&&<p>{evaluation.reason}</p>}{Boolean(evaluation.ruleIds?.length)&&<div className={styles.rules}><span>Applied rules</span>{evaluation.ruleIds!.map(rule=><Badge key={rule}>{rule}</Badge>)}</div>}</div>
+     {score&&<><h3>Score breakdown</h3><dl className={styles.definitions}><div><dt>Correctness</dt><dd>{percent(score.correctness)}</dd></div><div><dt>Critical requirements</dt><dd>{percent(score.critical)}</dd></div><div><dt>Answer quality</dt><dd>{percent(score.judge)}</dd></div><div><dt>Overall quality</dt><dd>{percent(score.quality)}</dd></div><div><dt>Generation tokens counted</dt><dd>{number(score.tokenUsage)}</dd></div>{score.problemRevision!=null&&<div><dt>Original task revision</dt><dd>{score.problemRevision}</dd></div>}</dl></>}
+     {(ranking?.firstCorrectAt||evaluation.firstCorrectAt)&&<small>First correct answer received: {date(ranking?.firstCorrectAt||evaluation.firstCorrectAt)}</small>}
+    </>}{detail.historyAvailable&&detail.submissionId&&onReview&&<button type="button" className="button small" onClick={onReview}>Review evidence</button>}</div>}
+    {tab==="history"&&<div className={styles.panel}>{!detail.historyAvailable&&<div className={styles.sealed}><Icon name="lock" size={18}/><span>During competition, only progress and token use are visible. Prompt and answer content stays sealed.</span></div>}{detail.attempts.length?<div className={styles.history}>{[...detail.attempts].sort((a,b)=>b.version-a.version).map(attempt=><article className={styles.attempt} key={attempt.id}><div className={styles.attemptHead}><h3>Attempt {attempt.version}</h3><Badge>{status(attempt.status)}</Badge></div><time dateTime={attempt.createdAt}>{date(attempt.createdAt)}</time><div className={styles.attemptUsage}><strong>{attempt.totalTokens==null?"Usage pending":number(attempt.totalTokens)+" tokens"}</strong><span>{number(attempt.inputTokens)} input · {number(attempt.outputTokens)} output</span></div>{detail.historyAvailable&&attempt.prompt!==undefined&&<details className={styles.content}><summary>View saved prompt and answer</summary><h4>Prompt</h4><pre>{attempt.prompt}</pre><h4>Generated answer</h4><pre>{attempt.answer??"No stored answer"}</pre><small>Stored content is read only.</small></details>}</article>)}</div>:<Empty icon="history" title="No attempts recorded">This participant has not generated an answer yet.</Empty>}</div>}
+   </div>
+  </>}
+ </Modal>;
+}

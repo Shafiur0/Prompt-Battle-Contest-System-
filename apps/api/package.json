@@ -1,0 +1,41 @@
+{
+  "name": "@prompt-battle/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run build && concurrently -n compile,server \"tsc -w -p tsconfig.json\" \"node --watch dist/main.js\"",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test src/**/*.test.ts",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "dev:worker": "tsx watch src/worker-main.ts",
+    "start:worker": "node dist/worker-main.js"
+  },
+  "dependencies": {
+    "@prompt-battle/core": "*",
+    "@nestjs/common": "latest",
+    "@nestjs/core": "latest",
+    "@nestjs/platform-express": "latest",
+    "reflect-metadata": "latest",
+    "rxjs": "latest",
+    "pg": "latest",
+    "dotenv": "latest",
+    "cookie-parser": "latest",
+    "jose": "latest",
+    "openid-client": "5.7.1",
+    "bullmq": "latest",
+    "ioredis": "latest",
+    "@aws-sdk/client-s3": "latest",
+    "ajv": "latest",
+    "ajv-formats": "latest",
+    "zod": "latest",
+    "@prompt-battle/openrouter": "*"
+  },
+  "devDependencies": {
+    "@types/pg": "latest",
+    "@types/express": "latest",
+    "@types/cookie-parser": "latest"
+  }
+}
